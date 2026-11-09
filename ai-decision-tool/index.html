@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Cloud Strategy Decision Tool</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header p { font-size: 1.1em; opacity: 0.9; }
+        .progress-container { background: #f8f9fa; padding: 20px 30px; border-bottom: 1px solid #e9ecef; }
+        .progress-bar { width: 100%; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 4px; transition: width 0.3s ease; width: 0%; }
+        .progress-text { margin-top: 10px; font-size: 0.9em; color: #6c757d; }
+        .content { padding: 40px; }
+        .category { display: none; animation: fadeIn 0.5s ease-in; }
+        .category.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .category-title { font-size: 1.8em; color: #2c3e50; margin-bottom: 30px; display: flex; align-items: center; }
+        .category-icon { width: 40px; height: 40px; margin-right: 15px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5em; }
+        .question { margin-bottom: 35px; }
+        .question-title { font-size: 1.2em; font-weight: 600; color: #2c3e50; margin-bottom: 15px; }
+        .options-grid { display: grid; gap: 12px; }
+        .option-card { border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.3s ease; background: white; position: relative; }
+        .option-card:hover { border-color: #667eea; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2); }
+        .option-card.selected { border-color: #667eea; background: linear-gradient(135deg, #667eea10, #764ba210); }
+        .option-card input[type="radio"], .option-card input[type="checkbox"] { position: absolute; opacity: 0; }
+        .option-title { font-weight: 600; color: #2c3e50; margin-bottom: 5px; }
+        .option-description { font-size: 0.9em; color: #6c757d; }
+        .multi-select .options-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+        .single-select .options-grid { grid-template-columns: 1fr; }
+        .size-options .options-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+        .navigation { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 30px; border-top: 1px solid #e9ecef; }
+        .nav-button { padding: 12px 30px; border: none; border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .nav-button.primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .nav-button.primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3); }
+        .nav-button.secondary { background: #f8f9fa; color: #6c757d; border: 1px solid #e9ecef; }
+        .nav-button.secondary:hover { background: #e9ecef; }
+        .nav-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        .results { display: none; text-align: center; }
+        .results.active { display: block; }
+        .recommendation-card { background: linear-gradient(135deg, #667eea10, #764ba210); border: 2px solid #667eea; border-radius: 16px; padding: 40px; margin: 30px 0; }
+        .recommendation-title { font-size: 2em; color: #2c3e50; margin-bottom: 15px; }
+        .confidence-score { font-size: 1.1em; color: #667eea; font-weight: 600; margin-bottom: 20px; }
+        .key-factors { text-align: left; margin-top: 30px; }
+        .factor { margin-bottom: 10px; padding: 10px; background: white; border-radius: 8px; border-left: 4px solid #667eea; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Cloud Strategy Decision Tool</h1>
+            <p>Determine whether public cloud AI services or private cloud infrastructure is right for your business</p>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Step 1 of 5</div>
+        </div>
+
+        <div class="content">
+            <!-- Category 1: Core Business Profile -->
+            <div class="category active" id="category1">
+                <div class="category-title">
+                    <div class="category-icon" style="background: linear-gradient(135deg, #3498db, #2980b9);">🏢</div>
+                    Core Business Profile
+                </div>
+
+                <div class="question">
+                    <div class="question-title">What is your organization's size?</div>
+                    <div class="options-grid size-options single-select">
+                        <div class="option-card" onclick="selectOption(this, 'size', 'small')">
+                            <input type="radio" name="size" value="small">
+                            <div class="option-title">Small Business</div>
+                            <div class="option-description">Under $10M revenue</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'size', 'medium')">
+                            <input type="radio" name="size" value="medium">
+                            <div class="option-title">Mid-Market</div>
+                            <div class="option-description">$10M - $100M revenue</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'size', 'large')">
+                            <input type="radio" name="size" value="large">
+                            <div class="option-title">Large Enterprise</div>
+                            <div class="option-description">$100M - $1B revenue</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'size', 'enterprise')">
+                            <input type="radio" name="size" value="enterprise">
+                            <div class="option-title">Fortune 500</div>
+                            <div class="option-description">Over $1B revenue</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <div class="question-title">What industry sector best describes your business?</div>
+                    <div class="options-grid single-select">
+                        <div class="option-card" onclick="selectOption(this, 'industry', 'healthcare')">
+                            <input type="radio" name="industry" value="healthcare">
+                            <div class="option-title">Healthcare</div>
+                            <div class="option-description">Hospitals, clinics, medical devices, pharmaceuticals</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'industry', 'financial')">
+                            <input type="radio" name="industry" value="financial">
+                            <div class="option-title">Financial Services</div>
+                            <div class="option-description">Banking, insurance, investment, fintech</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'industry', 'government')">
+                            <input type="radio" name="industry" value="government">
+                            <div class="option-title">Government</div>
+                            <div class="option-description">Federal, state, local government agencies</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'industry', 'manufacturing')">
+                            <input type="radio" name="industry" value="manufacturing">
+                            <div class="option-title">Manufacturing</div>
+                            <div class="option-description">Industrial production, automotive, aerospace</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'industry', 'technology')">
+                            <input type="radio" name="industry" value="technology">
+                            <div class="option-title">Technology</div>
+                            <div class="option-description">Software, hardware, telecommunications</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'industry', 'professional')">
+                            <input type="radio" name="industry" value="professional">
+                            <div class="option-title">Professional Services</div>
+                            <div class="option-description">Consulting, legal, accounting, marketing</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'industry', 'retail')">
+                            <input type="radio" name="industry" value="retail">
+                            <div class="option-title">Retail/E-commerce</div>
+                            <div class="option-description">Consumer goods, online marketplaces</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'industry', 'other')">
+                            <input type="radio" name="industry" value="other">
+                            <div class="option-title">Other</div>
+                            <div class="option-description">Education, non-profit, hospitality, media</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 2: Data & Compliance -->
+            <div class="category" id="category2">
+                <div class="category-title">
+                    <div class="category-icon" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">🔒</div>
+                    Data & Compliance
+                </div>
+
+                <div class="question">
+                    <div class="question-title">What type of sensitive data do you handle?</div>
+                    <div class="options-grid multi-select">
+                        <div class="option-card" onclick="selectMultiple(this, 'dataSensitivity', 'patient')">
+                            <input type="checkbox" name="dataSensitivity" value="patient">
+                            <div class="option-title">Patient/Health Records</div>
+                            <div class="option-description">Medical records, health information, diagnostic data</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'dataSensitivity', 'financial')">
+                            <input type="checkbox" name="dataSensitivity" value="financial">
+                            <div class="option-title">Financial/Payment Data</div>
+                            <div class="option-description">Credit cards, bank accounts, financial records</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'dataSensitivity', 'classified')">
+                            <input type="checkbox" name="dataSensitivity" value="classified">
+                            <div class="option-title">Government Classified</div>
+                            <div class="option-description">Classified information, defense data</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'dataSensitivity', 'trade')">
+                            <input type="checkbox" name="dataSensitivity" value="trade">
+                            <div class="option-title">Trade Secrets/IP</div>
+                            <div class="option-description">Proprietary algorithms, research data, competitive intelligence</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'dataSensitivity', 'personal')">
+                            <input type="checkbox" name="dataSensitivity" value="personal">
+                            <div class="option-title">Customer Personal Data</div>
+                            <div class="option-description">PII, behavioral data, customer profiles</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'dataSensitivity', 'none')">
+                            <input type="checkbox" name="dataSensitivity" value="none">
+                            <div class="option-title">No Sensitive Data</div>
+                            <div class="option-description">Public information, non-sensitive business data</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <div class="question-title">Which regulatory frameworks apply to your organization?</div>
+                    <div class="options-grid multi-select">
+                        <div class="option-card" onclick="selectMultiple(this, 'regulations', 'hipaa')">
+                            <input type="checkbox" name="regulations" value="hipaa">
+                            <div class="option-title">HIPAA</div>
+                            <div class="option-description">Healthcare data protection</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'regulations', 'sox')">
+                            <input type="checkbox" name="regulations" value="sox">
+                            <div class="option-title">SOX</div>
+                            <div class="option-description">Financial reporting compliance</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'regulations', 'pci')">
+                            <input type="checkbox" name="regulations" value="pci">
+                            <div class="option-title">PCI-DSS</div>
+                            <div class="option-description">Payment card data security</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'regulations', 'gdpr')">
+                            <input type="checkbox" name="regulations" value="gdpr">
+                            <div class="option-title">GDPR</div>
+                            <div class="option-description">EU data protection regulation</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'regulations', 'ccpa')">
+                            <input type="checkbox" name="regulations" value="ccpa">
+                            <div class="option-title">CCPA</div>
+                            <div class="option-description">California consumer privacy</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'regulations', 'fedramp')">
+                            <input type="checkbox" name="regulations" value="fedramp">
+                            <div class="option-title">FedRAMP</div>
+                            <div class="option-description">Federal cloud security standards</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'regulations', 'none')">
+                            <input type="checkbox" name="regulations" value="none">
+                            <div class="option-title">None</div>
+                            <div class="option-description">No specific regulatory requirements</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <div class="question-title">Where must your data be located/processed?</div>
+                    <div class="options-grid single-select">
+                        <div class="option-card" onclick="selectOption(this, 'dataLocation', 'us')">
+                            <input type="radio" name="dataLocation" value="us">
+                            <div class="option-title">US Only</div>
+                            <div class="option-description">Data must remain within United States</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'dataLocation', 'eu')">
+                            <input type="radio" name="dataLocation" value="eu">
+                            <div class="option-title">EU Only</div>
+                            <div class="option-description">Data must remain within European Union</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'dataLocation', 'global')">
+                            <input type="radio" name="dataLocation" value="global">
+                            <div class="option-title">Global/Multi-region</div>
+                            <div class="option-description">No specific geographic restrictions</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'dataLocation', 'specific')">
+                            <input type="radio" name="dataLocation" value="specific">
+                            <div class="option-title">Specific Country Requirements</div>
+                            <div class="option-description">Must comply with specific national data laws</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 3: Technical & Operational -->
+            <div class="category" id="category3">
+                <div class="category-title">
+                    <div class="category-icon" style="background: linear-gradient(135deg, #f39c12, #e67e22);">⚙️</div>
+                    Technical & Operational
+                </div>
+
+                <div class="question">
+                    <div class="question-title">What is your current IT infrastructure maturity?</div>
+                    <div class="options-grid single-select">
+                        <div class="option-card" onclick="selectOption(this, 'itMaturity', 'minimal')">
+                            <input type="radio" name="itMaturity" value="minimal">
+                            <div class="option-title">Minimal IT Staff</div>
+                            <div class="option-description">Limited technical resources, basic IT support</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'itMaturity', 'basic')">
+                            <input type="radio" name="itMaturity" value="basic">
+                            <div class="option-title">Basic IT Operations</div>
+                            <div class="option-description">Standard IT support, some cloud experience</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'itMaturity', 'mature')">
+                            <input type="radio" name="itMaturity" value="mature">
+                            <div class="option-title">Mature IT Department</div>
+                            <div class="option-description">Experienced IT team, cloud and infrastructure expertise</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'itMaturity', 'advanced')">
+                            <input type="radio" name="itMaturity" value="advanced">
+                            <div class="option-title">Advanced Technical Capabilities</div>
+                            <div class="option-description">DevOps, AI/ML expertise, advanced cloud architecture</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <div class="question-title">What are your primary AI use cases?</div>
+                    <div class="options-grid multi-select">
+                        <div class="option-card" onclick="selectMultiple(this, 'useCases', 'customer')">
+                            <input type="checkbox" name="useCases" value="customer">
+                            <div class="option-title">Customer Service</div>
+                            <div class="option-description">Chatbots, support automation, FAQ systems</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'useCases', 'document')">
+                            <input type="checkbox" name="useCases" value="document">
+                            <div class="option-title">Document Processing</div>
+                            <div class="option-description">Contract analysis, data extraction, content generation</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'useCases', 'analysis')">
+                            <input type="checkbox" name="useCases" value="analysis">
+                            <div class="option-title">Data Analysis</div>
+                            <div class="option-description">Business intelligence, predictive analytics, reporting</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'useCases', 'creative')">
+                            <input type="checkbox" name="useCases" value="creative">
+                            <div class="option-title">Creative Content</div>
+                            <div class="option-description">Marketing materials, content creation, design</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'useCases', 'code')">
+                            <input type="checkbox" name="useCases" value="code">
+                            <div class="option-title">Code Generation</div>
+                            <div class="option-description">Software development, automation scripts, testing</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'useCases', 'critical')">
+                            <input type="checkbox" name="useCases" value="critical">
+                            <div class="option-title">Mission-Critical Operations</div>
+                            <div class="option-description">Core business processes, real-time decision making</div>
+                        </div>
+                        <div class="option-card" onclick="selectMultiple(this, 'useCases', 'research')">
+                            <input type="checkbox" name="useCases" value="research">
+                            <div class="option-title">R&D</div>
+                            <div class="option-description">Research, experimentation, innovation projects</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <div class="question-title">What is your expected AI usage volume?</div>
+                    <div class="options-grid single-select">
+                        <div class="option-card" onclick="selectOption(this, 'usage', 'light')">
+                            <input type="radio" name="usage" value="light">
+                            <div class="option-title">Light/Occasional Use</div>
+                            <div class="option-description">Ad-hoc queries, limited user base</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'usage', 'moderate')">
+                            <input type="radio" name="usage" value="moderate">
+                            <div class="option-title">Moderate Daily Use</div>
+                            <div class="option-description">Regular business operations, moderate scale</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'usage', 'heavy')">
+                            <input type="radio" name="usage" value="heavy">
+                            <div class="option-title">Heavy Continuous Use</div>
+                            <div class="option-description">High-volume processing, continuous operations</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'usage', 'enterprise')">
+                            <input type="radio" name="usage" value="enterprise">
+                            <div class="option-title">Enterprise-Scale</div>
+                            <div class="option-description">Large-scale deployment, thousands of users</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 4: Strategic & Risk -->
+            <div class="category" id="category4">
+                <div class="category-title">
+                    <div class="category-icon" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">🎯</div>
+                    Strategic & Risk
+                </div>
+
+                <div class="question">
+                    <div class="question-title">How critical is AI to your operations?</div>
+                    <div class="options-grid single-select">
+                        <div class="option-card" onclick="selectOption(this, 'criticality', 'nice')">
+                            <input type="radio" name="criticality" value="nice">
+                            <div class="option-title">Nice to Have</div>
+                            <div class="option-description">Convenience feature, minimal business impact if unavailable</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'criticality', 'important')">
+                            <input type="radio" name="criticality" value="important">
+                            <div class="option-title">Important but Not Critical</div>
+                            <div class="option-description">Valuable for efficiency, alternatives exist</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'criticality', 'business')">
+                            <input type="radio" name="criticality" value="business">
+                            <div class="option-title">Business Critical</div>
+                            <div class="option-description">Core to operations, significant impact if unavailable</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'criticality', 'mission')">
+                            <input type="radio" name="criticality" value="mission">
+                            <div class="option-title">Mission Critical</div>
+                            <div class="option-description">Essential for business function, no alternatives</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <div class="question-title">What is your risk tolerance for data exposure?</div>
+                    <div class="options-grid single-select">
+                        <div class="option-card" onclick="selectOption(this, 'riskTolerance', 'very-low')">
+                            <input type="radio" name="riskTolerance" value="very-low">
+                            <div class="option-title">Very Low</div>
+                            <div class="option-description">Any data exposure is unacceptable</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'riskTolerance', 'low')">
+                            <input type="radio" name="riskTolerance" value="low">
+                            <div class="option-title">Low</div>
+                            <div class="option-description">Minimal exposure acceptable with strong protections</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'riskTolerance', 'moderate')">
+                            <input type="radio" name="riskTolerance" value="moderate">
+                            <div class="option-title">Moderate</div>
+                            <div class="option-description">Standard industry protections are sufficient</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'riskTolerance', 'high')">
+                            <input type="radio" name="riskTolerance" value="high">
+                            <div class="option-title">High</div>
+                            <div class="option-description">Focus on functionality over security constraints</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 5: Budget & Timeline -->
+            <div class="category" id="category5">
+                <div class="category-title">
+                    <div class="category-icon" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">💰</div>
+                    Budget & Timeline
+                </div>
+
+                <div class="question">
+                    <div class="question-title">What is your annual AI budget?</div>
+                    <div class="options-grid size-options single-select">
+                        <div class="option-card" onclick="selectOption(this, 'budget', 'small')">
+                            <input type="radio" name="budget" value="small">
+                            <div class="option-title">Under $50K</div>
+                            <div class="option-description">Small budget, cost-sensitive</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'budget', 'medium')">
+                            <input type="radio" name="budget" value="medium">
+                            <div class="option-title">$50K - $250K</div>
+                            <div class="option-description">Moderate investment capacity</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'budget', 'large')">
+                            <input type="radio" name="budget" value="large">
+                            <div class="option-title">$250K - $1M</div>
+                            <div class="option-description">Substantial budget, multiple options</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'budget', 'enterprise-mid')">
+                            <input type="radio" name="budget" value="enterprise-mid">
+                            <div class="option-title">$1M - $5M</div>
+                            <div class="option-description">Enterprise-level investment</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'budget', 'enterprise-large')">
+                            <input type="radio" name="budget" value="enterprise-large">
+                            <div class="option-title">Over $5M</div>
+                            <div class="option-description">Large-scale strategic investment</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <div class="question-title">What are your current AI/cloud commitments?</div>
+                    <div class="options-grid single-select">
+                        <div class="option-card" onclick="selectOption(this, 'commitments', 'none')">
+                            <input type="radio" name="commitments" value="none">
+                            <div class="option-title">No Existing Contracts</div>
+                            <div class="option-description">Complete flexibility to choose any solution</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'commitments', 'monthly')">
+                            <input type="radio" name="commitments" value="monthly">
+                            <div class="option-title">Month-to-Month Agreements</div>
+                            <div class="option-description">Flexible arrangements, easy to change</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'commitments', 'annual')">
+                            <input type="radio" name="commitments" value="annual">
+                            <div class="option-title">1-Year Contracts</div>
+                            <div class="option-description">Some flexibility, moderate switching costs</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'commitments', 'multi-year')">
+                            <input type="radio" name="commitments" value="multi-year">
+                            <div class="option-title">Multi-Year Contracts</div>
+                            <div class="option-description">Significant penalties for early termination</div>
+                        </div>
+                        <div class="option-card" onclick="selectOption(this, 'commitments', 'infrastructure')">
+                            <input type="radio" name="commitments" value="infrastructure">
+                            <div class="option-title">Major Infrastructure Investment</div>
+                            <div class="option-description">Substantial existing private cloud/hardware investment</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results" id="results">
+                <div class="category-title">
+                    <div class="category-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">📊</div>
+                    Your AI Cloud Strategy Recommendation
+                </div>
+
+                <div class="recommendation-card" id="recommendationCard">
+                    <div class="recommendation-title" id="recommendationTitle">Analyzing Your Responses...</div>
+                    <div class="confidence-score" id="confidenceScore">Calculating optimal strategy...</div>
+                    <div id="recommendationDetails"></div>
+                </div>
+
+                <div class="key-factors" id="keyFactors">
+                    <h3>Key Decision Factors</h3>
+                    <div id="factorsList"></div>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <button class="nav-button secondary" id="prevBtn" onclick="previousStep()" disabled>Previous</button>
+                <button class="nav-button primary" id="nextBtn" onclick="nextStep()">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+        let responses = {};
+
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+        });
+
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            if (progressFill) progressFill.style.width = progress + '%';
+            if (progressText) progressText.textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+
+        function selectOption(element, questionName, value) {
+            try {
+                // Clear other selections in the same question group
+                const questionDiv = element.closest('.question');
+                if (questionDiv) {
+                    const otherCards = questionDiv.querySelectorAll('.option-card');
+                    otherCards.forEach(card => card.classList.remove('selected'));
+                }
+                
+                // Select this option
+                element.classList.add('selected');
+                const input = element.querySelector('input');
+                if (input) input.checked = true;
+                responses[questionName] = value;
+            } catch (error) {
+                console.error('Error in selectOption:', error);
+            }
+        }
+
+        function selectMultiple(element, questionName, value) {
+            try {
+                const input = element.querySelector('input');
+                if (!input) return;
+                
+                if (element.classList.contains('selected')) {
+                    // Deselect
+                    element.classList.remove('selected');
+                    input.checked = false;
+                    
+                    if (!responses[questionName]) responses[questionName] = [];
+                    const index = responses[questionName].indexOf(value);
+                    if (index > -1) responses[questionName].splice(index, 1);
+                } else {
+                    // Select
+                    element.classList.add('selected');
+                    input.checked = true;
+                    
+                    if (!responses[questionName]) responses[questionName] = [];
+                    if (!responses[questionName].includes(value)) {
+                        responses[questionName].push(value);
+                    }
+                }
+
+                // Handle "none" option - if selected, deselect others
+                if (value === 'none' && element.classList.contains('selected')) {
+                    const questionDiv = element.closest('.question');
+                    if (questionDiv) {
+                        const otherCards = questionDiv.querySelectorAll('.option-card:not([onclick*="none"])');
+                        otherCards.forEach(card => {
+                            card.classList.remove('selected');
+                            const cardInput = card.querySelector('input');
+                            if (cardInput) cardInput.checked = false;
+                        });
+                        responses[questionName] = ['none'];
+                    }
+                } else if (responses[questionName] && responses[questionName].includes('none')) {
+                    // If selecting something other than none, remove none
+                    const noneIndex = responses[questionName].indexOf('none');
+                    if (noneIndex > -1) responses[questionName].splice(noneIndex, 1);
+                    
+                    // Also deselect the none card visually
+                    const questionDiv = element.closest('.question');
+                    if (questionDiv) {
+                        const noneCard = questionDiv.querySelector('[onclick*="none"]');
+                        if (noneCard) {
+                            noneCard.classList.remove('selected');
+                            const noneInput = noneCard.querySelector('input');
+                            if (noneInput) noneInput.checked = false;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error in selectMultiple:', error);
+            }
+        }
+
+        function nextStep() {
+            try {
+                if (currentStep < totalSteps) {
+                    const currentCategory = document.getElementById(`category${currentStep}`);
+                    if (currentCategory) currentCategory.classList.remove('active');
+                    
+                    currentStep++;
+                    
+                    const nextCategory = document.getElementById(`category${currentStep}`);
+                    if (nextCategory) nextCategory.classList.add('active');
+                    
+                    updateProgress();
+                    
+                    const prevBtn = document.getElementById('prevBtn');
+                    if (prevBtn) prevBtn.disabled = false;
+                    
+                    const nextBtn = document.getElementById('nextBtn');
+                    if (currentStep === totalSteps && nextBtn) {
+                        nextBtn.textContent = 'Get Recommendation';
+                    }
+                } else {
+                    // Show results
+                    showResults();
+                }
+            } catch (error) {
+                console.error('Error in nextStep:', error);
+            }
+        }
+
+        function previousStep() {
+            try {
+                if (currentStep > 1) {
+                    const currentCategory = document.getElementById(`category${currentStep}`);
+                    if (currentCategory) currentCategory.classList.remove('active');
+                    
+                    currentStep--;
+                    
+                    const prevCategory = document.getElementById(`category${currentStep}`);
+                    if (prevCategory) prevCategory.classList.add('active');
+                    
+                    updateProgress();
+                    
+                    const prevBtn = document.getElementById('prevBtn');
+                    if (currentStep === 1 && prevBtn) {
+                        prevBtn.disabled = true;
+                    }
+                    
+                    const nextBtn = document.getElementById('nextBtn');
+                    if (nextBtn) nextBtn.textContent = 'Next';
+                }
+            } catch (error) {
+                console.error('Error in previousStep:', error);
+            }
+        }
+
+        function showResults() {
+            try {
+                // Hide all categories
+                for (let i = 1; i <= totalSteps; i++) {
+                    const category = document.getElementById(`category${i}`);
+                    if (category) category.classList.remove('active');
+                }
+                
+                // Show results
+                const results = document.getElementById('results');
+                if (results) results.classList.add('active');
+                
+                const nextBtn = document.getElementById('nextBtn');
+                if (nextBtn) nextBtn.style.display = 'none';
+                
+                const prevBtn = document.getElementById('prevBtn');
+                if (prevBtn) {
+                    prevBtn.textContent = 'Start Over';
+                    prevBtn.onclick = function() { location.reload(); };
+                }
+                
+                // Calculate recommendation
+                calculateRecommendation();
+            } catch (error) {
+                console.error('Error in showResults:', error);
+            }
+        }
+
+        function calculateRecommendation() {
+            try {
+                let score = 0; // Score for private cloud recommendation
+                let factors = [];
+                let confidence = 0;
+
+                // Industry factors
+                if (responses.industry === 'healthcare' || responses.industry === 'government' || responses.industry === 'financial') {
+                    score += 30;
+                    factors.push('High-regulation industry favors private cloud for compliance control');
+                    confidence += 15;
+                }
+
+                // Data sensitivity
+                if (responses.dataSensitivity && Array.isArray(responses.dataSensitivity)) {
+                    const sensitive = responses.dataSensitivity.filter(d => d !== 'none');
+                    if (sensitive.length > 0) {
+                        score += sensitive.length * 15;
+                        factors.push(`${sensitive.length} type(s) of sensitive data require enhanced security`);
+                        confidence += 10;
+                    }
+                    if (responses.dataSensitivity.includes('classified') || responses.dataSensitivity.includes('patient')) {
+                        score += 25;
+                        factors.push('Highly regulated data types strongly favor private infrastructure');
+                        confidence += 15;
+                    }
+                }
+
+                // Regulatory compliance
+                if (responses.regulations && Array.isArray(responses.regulations)) {
+                    const regs = responses.regulations.filter(r => r !== 'none');
+                    if (regs.length > 0) {
+                        score += regs.length * 10;
+                        factors.push(`${regs.length} regulatory framework(s) may require private cloud compliance`);
+                        confidence += 10;
+                    }
+                    if (responses.regulations.includes('fedramp') || responses.regulations.includes('hipaa')) {
+                        score += 20;
+                        factors.push('Strict compliance requirements favor private cloud');
+                        confidence += 15;
+                    }
+                }
+
+                // IT maturity
+                if (responses.itMaturity === 'minimal' || responses.itMaturity === 'basic') {
+                    score -= 25;
+                    factors.push('Limited IT resources favor public cloud managed services');
+                    confidence += 10;
+                } else if (responses.itMaturity === 'advanced') {
+                    score += 15;
+                    factors.push('Advanced IT capabilities enable private cloud management');
+                    confidence += 10;
+                }
+
+                // Budget considerations
+                if (responses.budget === 'small' || responses.budget === 'medium') {
+                    score -= 20;
+                    factors.push('Limited budget favors cost-effective public cloud options');
+                    confidence += 15;
+                } else if (responses.budget === 'enterprise-mid' || responses.budget === 'enterprise-large') {
+                    score += 15;
+                    factors.push('Substantial budget enables private cloud investment');
+                    confidence += 10;
+                }
+
+                // Usage volume
+                if (responses.usage === 'enterprise' || responses.usage === 'heavy') {
+                    score += 15;
+                    factors.push('High usage volume may benefit from private cloud economics');
+                    confidence += 10;
+                } else if (responses.usage === 'light') {
+                    score -= 15;
+                    factors.push('Light usage favors pay-per-use public cloud model');
+                    confidence += 10;
+                }
+
+                // Criticality
+                if (responses.criticality === 'mission' || responses.criticality === 'business') {
+                    score += 20;
+                    factors.push('Critical operations require maximum control and reliability');
+                    confidence += 15;
+                }
+
+                // Risk tolerance
+                if (responses.riskTolerance === 'very-low' || responses.riskTolerance === 'low') {
+                    score += 25;
+                    factors.push('Low risk tolerance requires private cloud security');
+                    confidence += 15;
+                } else if (responses.riskTolerance === 'high') {
+                    score -= 15;
+                    factors.push('High risk tolerance enables public cloud adoption');
+                    confidence += 10;
+                }
+
+                // Existing commitments
+                if (responses.commitments === 'infrastructure') {
+                    score += 30;
+                    factors.push('Existing infrastructure investment favors private cloud expansion');
+                    confidence += 15;
+                } else if (responses.commitments === 'multi-year') {
+                    score -= 20;
+                    factors.push('Existing contracts create switching costs from current solution');
+                    confidence += 10;
+                }
+
+                // Organization size
+                if (responses.size === 'enterprise' || responses.size === 'large') {
+                    score += 10;
+                    factors.push('Large organization scale supports private cloud investment');
+                    confidence += 5;
+                } else if (responses.size === 'small') {
+                    score -= 15;
+                    factors.push('Small organization benefits from public cloud simplicity');
+                    confidence += 10;
+                }
+
+                // Determine recommendation
+                let recommendation, details;
+                confidence = Math.min(95, Math.max(60, confidence));
+
+                if (score >= 50) {
+                    recommendation = "Private Cloud Recommended";
+                    details = "Your organization's security requirements, compliance needs, and scale strongly favor a private cloud AI infrastructure. Consider building internal capabilities or partnering with a private cloud provider.";
+                } else if (score >= 0) {
+                    recommendation = "Hybrid Approach Recommended";
+                    details = "Your organization would benefit from a mixed approach - using public cloud for non-sensitive workloads and private cloud for critical or sensitive AI applications. This provides flexibility while managing risk.";
+                } else {
+                    recommendation = "Public Cloud Recommended";
+                    details = "Public cloud AI services (Claude, ChatGPT, Gemini) are the optimal choice for your organization. They offer cost-effectiveness, ease of implementation, and access to cutting-edge capabilities without infrastructure overhead.";
+                }
+
+                // Display results safely
+                const recommendationTitle = document.getElementById('recommendationTitle');
+                if (recommendationTitle) recommendationTitle.textContent = recommendation;
+                
+                const confidenceScore = document.getElementById('confidenceScore');
+                if (confidenceScore) confidenceScore.textContent = `Confidence Score: ${confidence}%`;
+                
+                const recommendationDetails = document.getElementById('recommendationDetails');
+                if (recommendationDetails) {
+                    recommendationDetails.innerHTML = `<p style="margin-top: 15px; color: #2c3e50; line-height: 1.6;">${details}</p>`;
+                }
+
+                // Display factors
+                const factorsList = document.getElementById('factorsList');
+                if (factorsList) {
+                    factorsList.innerHTML = factors.map(factor => `<div class="factor">${factor}</div>`).join('');
+                }
+            } catch (error) {
+                console.error('Error in calculateRecommendation:', error);
+            }
+        }
+    </script>
+</body>
+</html>
