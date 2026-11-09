@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Theme Park Trivia</title>
+<meta name="description" content="25 theme park trivia questions from around the world. Play solo or challenge a team.">
+<meta name="theme-color" content="#d63384">
+<meta property="og:title" content="Theme Park Trivia">
+<meta property="og:description" content="25 theme park trivia questions from around the world. Play solo or challenge a team.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%A2%3C/text%3E%3C/svg%3E">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(135deg,#ff6b9d 0%,#c44bd6 45%,#2bb8c9 100%);min-height:100vh;padding:16px;color:#2d3436;line-height:1.45}
+.container{max-width:560px;margin:0 auto;background:#fff;border-radius:18px;padding:22px 18px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+h1{text-align:center;font-size:1.7em;color:#b02a73;margin-bottom:6px}
+.subtitle{text-align:center;color:#636e72;margin-bottom:20px;font-size:.95em}
+.screen{display:none}
+.mode-btn,.primary-btn{display:block;width:100%;padding:16px;margin-bottom:12px;border:none;border-radius:12px;font-size:1.05em;font-weight:700;color:#fff;background:linear-gradient(135deg,#ff6b9d,#c44bd6);cursor:pointer;text-align:center}
+.mode-btn small{display:block;font-weight:400;opacity:.9;margin-top:4px;font-size:.82em}
+.mode-btn.alt{background:linear-gradient(135deg,#2bb8c9,#3a7bd5)}
+.ghost-btn{display:block;width:100%;padding:12px;margin-bottom:12px;border:2px solid #dfe6e9;border-radius:12px;background:#fff;font-size:1em;font-weight:600;color:#2d3436;cursor:pointer}
+label{display:block;font-weight:600;margin:10px 0 4px;font-size:.9em}
+input[type=text]{width:100%;padding:12px;border:2px solid #dfe6e9;border-radius:10px;font-size:1em}
+.meta{display:flex;justify-content:space-between;font-size:.85em;color:#636e72;margin-bottom:6px}
+.bar{height:8px;background:#eee;border-radius:6px;overflow:hidden;margin-bottom:14px}
+.bar div{height:100%;width:0;background:linear-gradient(90deg,#ff6b9d,#2bb8c9);transition:width .3s}
+.teamboard{display:flex;gap:8px;margin-bottom:12px}
+.team{flex:1;text-align:center;padding:8px 6px;border-radius:10px;background:#f5f6fa;border:2px solid transparent;font-size:.9em}
+.team b{display:block;font-size:1.3em}
+.team.active{border-color:#c44bd6;background:#f8ebff}
+.turn{text-align:center;font-weight:700;color:#8e24aa;margin-bottom:10px}
+.question{font-size:1.15em;font-weight:700;margin-bottom:14px}
+.answer-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:14px 12px;margin-bottom:10px;border:2px solid #dfe6e9;border-radius:12px;background:#fff;font-size:1em;cursor:pointer;color:#2d3436}
+.answer-btn .badge{flex:0 0 28px;height:28px;border-radius:50%;background:#f0e6f6;color:#8e24aa;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85em}
+.answer-btn .txt{flex:1}
+.answer-btn .tag{margin-left:auto;padding-left:8px;font-weight:800;font-size:.78em;white-space:nowrap;text-align:right}
+.answer-btn.locked{cursor:default}
+.answer-btn.correct{background:#e6f9ec;border-color:#28a745}
+.answer-btn.correct .tag{color:#1e7e34}
+.answer-btn.incorrect{background:#fdeaea;border-color:#dc3545}
+.answer-btn.incorrect .tag{color:#b21f2d}
+.explain{display:none;background:#f5f6fa;border-left:4px solid #c44bd6;border-radius:8px;padding:12px;margin:6px 0 14px;font-size:.92em}
+.explain .ans{font-weight:700;margin-bottom:4px}
+.controls{display:flex;gap:10px;margin-bottom:6px}
+.controls button{flex:1;padding:13px;border:none;border-radius:12px;font-size:1em;font-weight:700;cursor:pointer;background:#dfe6e9;color:#2d3436}
+.controls button.next{background:linear-gradient(135deg,#2bb8c9,#3a7bd5);color:#fff}
+.controls button:disabled{opacity:.4;cursor:not-allowed}
+.linkedin{text-align:center;margin-top:16px;padding-top:12px;border-top:1px solid #eee;font-size:.78em}
+.linkedin a{color:#0077b5;text-decoration:none}
+.linkedin a:hover{text-decoration:underline}
+.final{text-align:center}
+.final .big{font-size:2.4em;font-weight:800;color:#b02a73;margin:12px 0}
+.final .msg{margin-bottom:18px;color:#636e72}
+@media (max-width:380px){h1{font-size:1.4em}.answer-btn{padding:12px 10px}}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎢 Theme Park Trivia</h1>
+
+  <div id="modeScreen" class="screen">
+    <p class="subtitle">25 questions from theme parks around the world</p>
+    <button class="mode-btn" type="button" onclick="startGame('free')">🎮 Free Play<small>Play at your own pace</small></button>
+    <button class="mode-btn alt" type="button" onclick="showTeamSetup()">👥 Team Challenge<small>Two teams take turns</small></button>
+    <div class="linkedin"><a href="https://www.linkedin.com/in/colmanmurphy/" target="_blank" rel="noopener">Connect with Colman on LinkedIn</a></div>
+  </div>
+
+  <div id="teamScreen" class="screen">
+    <p class="subtitle">Name your teams</p>
+    <label for="team1">Team 1</label>
+    <input type="text" id="team1" maxlength="20" value="Team 1">
+    <label for="team2">Team 2</label>
+    <input type="text" id="team2" maxlength="20" value="Team 2" style="margin-bottom:16px">
+    <button class="primary-btn" type="button" onclick="startTeamGame()">Start Team Challenge</button>
+    <button class="ghost-btn" type="button" onclick="showScreen('modeScreen')">Back</button>
+    <div class="linkedin"><a href="https://www.linkedin.com/in/colmanmurphy/" target="_blank" rel="noopener">Connect with Colman on LinkedIn</a></div>
+  </div>
+
+  <div id="gameScreen" class="screen">
+    <div class="teamboard" id="teamBoard" style="display:none">
+      <div class="team" id="tb0"><span id="tn0"></span><b id="ts0">0</b></div>
+      <div class="team" id="tb1"><span id="tn1"></span><b id="ts1">0</b></div>
+    </div>
+    <div class="meta"><span id="qCount"></span><span id="scoreLine"></span></div>
+    <div class="bar"><div id="barFill"></div></div>
+    <div class="turn" id="turn" style="display:none"></div>
+    <div class="question" id="question"></div>
+    <div id="answers"></div>
+    <div class="explain" id="explain"><div class="ans" id="exAns"></div><div id="exInfo"></div></div>
+    <div class="controls">
+      <button type="button" id="prevBtn" onclick="prevQ()">Previous</button>
+      <button type="button" id="nextBtn" class="next" onclick="nextQ()">Next</button>
+    </div>
+    <div class="linkedin"><a href="https://www.linkedin.com/in/colmanmurphy/" target="_blank" rel="noopener">Connect with Colman on LinkedIn</a></div>
+  </div>
+
+  <div id="finalScreen" class="screen final">
+    <p class="subtitle">Final Score</p>
+    <div class="big" id="finalBig"></div>
+    <div class="msg" id="finalMsg"></div>
+    <button class="primary-btn" type="button" onclick="showScreen('modeScreen')">Play Again</button>
+    <div class="linkedin"><a href="https://www.linkedin.com/in/colmanmurphy/" target="_blank" rel="noopener">Connect with Colman on LinkedIn</a></div>
+  </div>
+</div>
+
+<script>
+// In BANK, the FIRST answer is always the correct one; options are shuffled at runtime.
+var BANK = [
+  {q:"Which theme park draws the most visitors in the world each year?",
+   a:["Magic Kingdom (Walt Disney World, Florida)","Disneyland Park (Anaheim, California)","Tokyo Disneyland"],
+   info:"Magic Kingdom welcomes roughly 17 to 18 million guests a year and tops the global attendance rankings, with Disneyland Park close behind."},
+  {q:"In what year did Disneyland open in Anaheim, California?",
+   a:["1955","1950","1963"],
+   info:"Disneyland opened on July 17, 1955. The chaotic opening day, with counterfeit tickets and heat, is remembered as \"Black Sunday.\""},
+  {q:"Which park is widely recognized as the world's oldest operating amusement park?",
+   a:["Dyrehavsbakken (Bakken), Denmark","Tivoli Gardens, Denmark","Cedar Point, Ohio"],
+   info:"Bakken, north of Copenhagen, dates back to 1583. Tivoli Gardens (1843) is also very old but comes later."},
+  {q:"Cedar Point, famous for its huge collection of roller coasters, sits on a peninsula in which state?",
+   a:["Ohio","Pennsylvania","Michigan"],
+   info:"Cedar Point is in Sandusky, Ohio, on Lake Erie. It has operated since 1870 and is nicknamed the \"Roller Coaster Capital of the World.\""},
+  {q:"Europa-Park, one of Europe's most popular theme parks, is in which country?",
+   a:["Germany","France","Netherlands"],
+   info:"Europa-Park is in Rust, Germany, close to the French border and the Black Forest. Its areas are themed after European countries."},
+  {q:"What was Disneyland Paris originally called when it opened in 1992?",
+   a:["Euro Disney Resort","Disney Europa","Disneyland Europe"],
+   info:"It opened as Euro Disney Resort in April 1992 and was renamed Disneyland Paris in 1995."},
+  {q:"At which Orlando park did The Wizarding World of Harry Potter first open in 2010?",
+   a:["Islands of Adventure","Universal Studios Florida","Universal Studios Hollywood"],
+   info:"The original Hogsmeade land opened at Islands of Adventure in June 2010. Diagon Alley followed at Universal Studios Florida in 2014."},
+  {q:"Which was the first Disney theme park built outside the United States?",
+   a:["Tokyo Disneyland","Disneyland Paris","Hong Kong Disneyland"],
+   info:"Tokyo Disneyland opened on April 15, 1983. It is operated by the Oriental Land Company under license from Disney."},
+  {q:"The original Ferris wheel debuted at which event?",
+   a:["The 1893 World's Columbian Exposition in Chicago","The 1889 Exposition Universelle in Paris","The 1876 Centennial Exposition in Philadelphia"],
+   info:"George Washington Gale Ferris Jr. built it as America's answer to the Eiffel Tower. It stood about 264 feet tall."},
+  {q:"Ferrari World, home to the Formula Rossa coaster, is in which city?",
+   a:["Abu Dhabi","Dubai","Doha"],
+   info:"Ferrari World is on Yas Island in Abu Dhabi. Formula Rossa launches riders to about 149 mph (240 km/h) in roughly five seconds and was long the world's fastest coaster."},
+  {q:"Alton Towers Resort, home to the Nemesis and Oblivion coasters, is in which country?",
+   a:["England","Scotland","Wales"],
+   info:"Alton Towers is in Staffordshire, England. Oblivion, opened in 1998, was the first coaster with a vertical drop."},
+  {q:"Everland, one of the busiest theme parks in Asia, is in which country?",
+   a:["South Korea","Japan","China"],
+   info:"Everland is in Yongin, near Seoul. It opened in 1976 and was renamed Everland in 1996."},
+  {q:"Efteling, a fairy-tale themed park that opened in 1952, is in which country?",
+   a:["The Netherlands","Belgium","Germany"],
+   info:"Efteling is in Kaatsheuvel, the Netherlands. It began around a Fairytale Forest and is a major influence on theme park storytelling."},
+  {q:"Dollywood, named for country star Dolly Parton, is located in which state?",
+   a:["Tennessee","Kentucky","North Carolina"],
+   info:"Dollywood is in Pigeon Forge, Tennessee, near the Great Smoky Mountains."},
+  {q:"Coney Island's famous wooden Cyclone roller coaster opened in which decade?",
+   a:["The 1920s","The 1950s","The 1970s"],
+   info:"The Cyclone opened on June 26, 1927 in Brooklyn, New York, and has been designated a New York City landmark."},
+  {q:"Hersheypark in Pennsylvania was originally built in 1906 for whom?",
+   a:["Employees of the Hershey Chocolate Company","Visitors to a nearby World's Fair","Railroad passengers"],
+   info:"Milton Hershey created the park as a leisure space for his chocolate factory workers. It later grew into a major public theme park."},
+  {q:"Where did the very first Legoland open in 1968?",
+   a:["Billund, Denmark","Windsor, England","Carlsbad, California"],
+   info:"Legoland Billund sits next to the Lego company's headquarters. The Windsor and Carlsbad parks came later."},
+  {q:"What is the name of the iconic castle at the center of Magic Kingdom?",
+   a:["Cinderella Castle","Sleeping Beauty Castle","Enchanted Storybook Castle"],
+   info:"Cinderella Castle stands about 189 feet tall. Sleeping Beauty Castle is at Disneyland, and Enchanted Storybook Castle is in Shanghai."},
+  {q:"Which park's version of Space Mountain opened first?",
+   a:["Magic Kingdom, 1975","Disneyland, 1977","Tokyo Disneyland, 1983"],
+   info:"Space Mountain debuted at Walt Disney World's Magic Kingdom in January 1975. Disneyland's followed in 1977."},
+  {q:"Gardaland, Italy's most popular theme park, is on the shores of which lake?",
+   a:["Lake Garda","Lake Como","Lake Maggiore"],
+   info:"Gardaland opened in 1975 on Lake Garda, near Verona, and is named after the lake."},
+  {q:"In what year did Disney California Adventure open next to Disneyland?",
+   a:["2001","1998","2006"],
+   info:"It opened in February 2001 and was heavily reworked in 2012 with the addition of Cars Land."},
+  {q:"Universal Studios Japan, which opened in 2001, is in which city?",
+   a:["Osaka","Tokyo","Nagoya"],
+   info:"Universal Studios Japan is in Osaka. It is home to Super Nintendo World, which opened there in 2021."},
+  {q:"Knott's Berry Farm in California began as a roadside stand selling what?",
+   a:["Boysenberries","Strawberries","Peaches"],
+   info:"Walter Knott popularized the boysenberry. His wife's chicken dinners drew crowds, and attractions were added to entertain the people waiting."},
+  {q:"Which Disneyland attraction was the world's first tubular steel roller coaster?",
+   a:["Matterhorn Bobsleds","Space Mountain","Big Thunder Mountain Railroad"],
+   info:"The Matterhorn Bobsleds opened in 1959. Tubular steel track allowed smoother, twistier rides and changed coaster design."},
+  {q:"Which new Universal theme park opened in Orlando in May 2025?",
+   a:["Epic Universe","Universal Horizons","Universal Wonderland"],
+   info:"Epic Universe was the resort's first new theme park since Islands of Adventure in 1999, featuring Super Nintendo World and Celestial Park."}
+];
+
+var deck = [], cur = 0, picks = [], score = 0, tScores = [0,0], tNames = ["Team 1","Team 2"], mode = "free";
+function $(id){ return document.getElementById(id); }
+
+function showScreen(id){
+  ["modeScreen","teamScreen","gameScreen","finalScreen"].forEach(function(s){
+    $(s).style.display = (s === id) ? "block" : "none";
+  });
+  window.scrollTo(0,0);
+}
+
+function shuffle(arr){
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function buildDeck(){
+  return shuffle(BANK).map(function(item, i){
+    var opts = shuffle(item.a.map(function(t, k){ return {t:t, ok:(k === 0)}; }));
+    var ci = 0;
+    opts.forEach(function(o, idx){ if (o.ok) ci = idx; });
+    return {q:item.q, opts:opts, correct:ci, info:item.info, team:i % 2};
+  });
+}
+
+function showTeamSetup(){ showScreen("teamScreen"); }
+
+function startTeamGame(){
+  tNames = [$("team1").value.trim() || "Team 1", $("team2").value.trim() || "Team 2"];
+  startGame("team");
+}
+
+function startGame(m){
+  mode = m;
+  deck = buildDeck();
+  cur = 0; score = 0; tScores = [0,0];
+  picks = deck.map(function(){ return null; });
+  $("teamBoard").style.display = (m === "team") ? "flex" : "none";
+  $("turn").style.display = (m === "team") ? "block" : "none";
+  $("tn0").textContent = tNames[0];
+  $("tn1").textContent = tNames[1];
+  showScreen("gameScreen");
+  render();
+}
+
+function render(){
+  var d = deck[cur];
+  $("qCount").textContent = "Question " + (cur + 1) + " of " + deck.length;
+  $("barFill").style.width = ((cur + 1) / deck.length * 100) + "%";
+  $("question").textContent = d.q;
+  if (mode === "team"){
+    $("turn").textContent = "🎯 " + tNames[d.team] + "'s turn";
+    $("tb0").className = "team" + (d.team === 0 ? " active" : "");
+    $("tb1").className = "team" + (d.team === 1 ? " active" : "");
+  }
+  var box = $("answers");
+  box.innerHTML = "";
+  d.opts.forEach(function(o, i){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "answer-btn";
+    var badge = document.createElement("span"); badge.className = "badge"; badge.textContent = "ABC".charAt(i);
+    var txt = document.createElement("span"); txt.className = "txt"; txt.textContent = o.t;
+    var tag = document.createElement("span"); tag.className = "tag";
+    b.appendChild(badge); b.appendChild(txt); b.appendChild(tag);
+    b.addEventListener("click", function(){ choose(i); });
+    box.appendChild(b);
+  });
+  $("explain").style.display = "none";
+  if (picks[cur] !== null) paint();
+  updateScores();
+  $("prevBtn").disabled = (cur === 0);
+  $("nextBtn").disabled = (picks[cur] === null);
+  $("nextBtn").textContent = (cur === deck.length - 1) ? "Finish" : "Next";
+}
+
+function choose(i){
+  if (picks[cur] !== null) return;
+  picks[cur] = i;
+  var d = deck[cur];
+  if (i === d.correct){
+    if (mode === "team") tScores[d.team]++; else score++;
+  }
+  paint();
+  updateScores();
+  $("nextBtn").disabled = false;
+}
+
+function paint(){
+  var d = deck[cur], p = picks[cur];
+  var btns = $("answers").children;
+  for (var i = 0; i < btns.length; i++){
+    btns[i].className = "answer-btn locked";
+    if (i === d.correct) btns[i].className += " correct";
+    else if (i === p) btns[i].className += " incorrect";
+    if (i === p){
+      btns[i].lastChild.textContent = (p === d.correct) ? "CORRECT!" : "INCORRECT!";
+    }
+  }
+  $("exAns").textContent = "Answer: " + d.opts[d.correct].t;
+  $("exInfo").textContent = d.info;
+  $("explain").style.display = "block";
+}
+
+function updateScores(){
+  var answered = picks.filter(function(p){ return p !== null; }).length;
+  if (mode === "team"){
+    $("ts0").textContent = tScores[0];
+    $("ts1").textContent = tScores[1];
+    $("scoreLine").textContent = "";
+  } else {
+    $("scoreLine").textContent = "Score: " + score + " / " + answered;
+  }
+}
+
+function prevQ(){ if (cur > 0){ cur--; render(); } }
+
+function nextQ(){
+  if (picks[cur] === null) return;
+  if (cur < deck.length - 1){ cur++; render(); } else { finish(); }
+}
+
+function finish(){
+  var big, msg;
+  if (mode === "team"){
+    if (tScores[0] === tScores[1]){
+      big = tScores[0] + " - " + tScores[1];
+      msg = "It's a tie! Both teams know their theme parks.";
+    } else {
+      var w = tScores[0] > tScores[1] ? 0 : 1;
+      big = tNames[w] + " wins!";
+      msg = tNames[0] + " " + tScores[0] + "  |  " + tNames[1] + " " + tScores[1];
+    }
+  } else {
+    big = score + " / " + deck.length;
+    var pct = Math.round(score / deck.length * 100);
+    if (pct >= 90) msg = "🎢 Outstanding! You're a theme park expert!";
+    else if (pct >= 80) msg = "🎠 Excellent! You really know your parks!";
+    else if (pct >= 70) msg = "🎡 Good job! Solid theme park knowledge.";
+    else if (pct >= 60) msg = "🎪 Not bad! Time for more park visits.";
+    else msg = "🎟️ Time to plan some theme park adventures!";
+  }
+  $("finalBig").textContent = big;
+  $("finalMsg").textContent = msg;
+  showScreen("finalScreen");
+}
+
+showScreen("modeScreen");
+</script>
+</body>
+</html>
